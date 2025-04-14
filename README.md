@@ -1,3 +1,6 @@
+# Jwibulnori
+C# AI Framework
+
 Introduction
 Jwibulnori(쥐볼놀이) is a C#-based AI framework with support for tensor operations, neural network modules, and CUDA integration. It is designed for researchers, developers, and students alike to make it easy to build and train deep learning models in the C# environment. With its intuitive API and GPU-accelerated high-performance computation, Jwibulnori enables users to conduct deep learning experiments efficiently.
 Features

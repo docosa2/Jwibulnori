@@ -1,6 +1,6 @@
 # Jwibulnori
 
-![Jwibulnori Logo](./logo.png)
+![Jwibulnori Logo](./logo.png.png)
 
 ### C# AI Framework
 

@@ -3,16 +3,16 @@ using BenchmarkDotNet.Attributes;
 [MemoryDiagnoser]
 public class TensorBenchmark
 {
-    private Tensor tensorA;
-    private Tensor tensorB;
-    private Tensor result;
+    private Tensor<float> tensorA;
+    private Tensor<float> tensorB;
+    private Tensor<float> result;
 
     [GlobalSetup]
     public void Setup()
     {
-        tensorA = new Tensor(new int[] { 1000 });
-        tensorB = new Tensor(new int[] { 1000 });
-        result = new Tensor(new int[] { 1000 });
+        tensorA = new Tensor<float>(new int[] { 1000 });
+        tensorB = new Tensor<float>(new int[] { 1000 });
+        result = new Tensor<float>(new int[] { 1000 });
 
         for (int i = 0; i < 1000; i++)
         {

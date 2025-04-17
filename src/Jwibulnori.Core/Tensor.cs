@@ -1,71 +1,92 @@
 // 2025-04-17 by Kwak, M.D.
+using System;
+using System.Buffers;
+using System.Linq;
 
-public class Tensor
+public class Tensor<T>
 {
-    public float[] Data;
-    public int[] Shape;
-    public int[] Strides;
+    public int[] Shape { get; }
+    public int[] Strides { get; }
+    public T[] Data { get; private set;}
+    public int Rank => Shape.Length;
+    public int Length => Data.Length;
 
-    public Tensor(int[] shape)
+    public Tensor(params int[] shape)
     {
-        Shape = shape;
-        Data = new float[Shape.Aggregate((a, b) => a * b)];
-        Strides = ComputeStrides(Shape);
-    }
+        if (shape == null || shape.Length == 0)
+            throw new ArgumentException("Shape must be a non-empty array.");
 
-    public Tensor(float[] data, int[] shape)
-    {
-        if (data.Length != shape.Aggregate((a, b) => a * b))
-            throw new ArgumentException("Data length does not match shape.");
-        Data = (float[])data.Clone();
         Shape = (int[])shape.Clone();
         Strides = ComputeStrides(Shape);
+        Data = new T[ComputeLength(Shape)];
     }
 
-    private int[] ComputeStrides(int[] shape)
+    private static int[] ComputeStrides(int[] shape)
     {
         int[] strides = new int[shape.Length];
-        int acc = 1;
+        int stride = 1;
         for (int i = shape.Length - 1; i >= 0; i--)
         {
-            strides[i] = acc;
-            acc *= shape[i];
+            strides[i] = stride;
+            stride *= shape[i];
         }
         return strides;
     }
 
+    private static int ComputeLength(int[] shape)
+    {
+        int length = 1;
+        foreach (var dim in shape)
+            length *= dim;
+        return length;
+    }
+
     public int GetOffset(int[] indices)
     {
-        if (indices.Length != Shape.Length)
-            throw new ArgumentException("Dimension mismatch.");
+        if (indices.Length != Rank)
+            throw new ArgumentException($"Expected {Rank} indices, but got {indices.Length}.");
+
         int offset = 0;
-        for (int i = 0; i < indices.Length; i++)
+        for (int i = 0; i < Rank; i++)
+        {
+            if (indices[i] < 0 || indices[i] >= Shape[i])
+                throw new ArgumentOutOfRangeException($"Index {i} is out of bounds.");
             offset += indices[i] * Strides[i];
+        }
         return offset;
     }
 
-    public float this[params int[] indices]
+    public T this[params int[] indices]
     {
         get => Data[GetOffset(indices)];
         set => Data[GetOffset(indices)] = value;
     }
 
-    public Tensor Reshape(int[] newShape)
+    public Tensor<T> Reshape(int[] newShape)
     {
-        if (newShape.Aggregate((a, b) => a * b) != Data.Length)
-            throw new ArgumentException("Total size must remain unchanged.");
-        return new Tensor(Data, newShape);
+        if (ComputeLength(newShape) != Length)
+            throw new ArgumentException("Total size of new shape must be unchanged.");
+
+        var reshaped = new Tensor<T>(newShape)
+        {
+            Data = Data // Sharing the same data array
+        };
+        return reshaped;
     }
 
-    public Tensor Clone()
+    public Tensor<T> Clone()
     {
-        return new Tensor(Data, Shape);
+        var clone = new Tensor<T>(Shape);
+        Array.Copy(Data, clone.Data, Length);
+        return clone;
     }
 
-    public void CopyTo(Tensor target)
+    public void CopyTo(Tensor<T> destination)
     {
-        if (target.Data.Length != Data.Length)
-            throw new ArgumentException("Target tensor size mismatch.");
-        Array.Copy(this.Data, target.Data, Data.Length);
+        if (destination == null)
+            throw new ArgumentNullException(nameof(destination));
+        if (destination.Length != Length)
+            throw new ArgumentException("Destination tensor must have the same length.");
+        Array.Copy(Data, destination.Data, Length);
     }
 }
